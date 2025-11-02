@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LRFormProps {
   initialData?: any;
@@ -28,12 +29,49 @@ interface ItemRow {
 const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
   const { toast } = useToast();
   const [lrType, setLrType] = useState<"dummy" | "original">("original");
+  const [lrNo, setLrNo] = useState("");
+  const [truckNo, setTruckNo] = useState("");
   const [date, setDate] = useState<Date>(new Date());
+  const [fromPlace, setFromPlace] = useState("");
+  const [toPlace, setToPlace] = useState("");
   const [invoiceDate, setInvoiceDate] = useState<Date>(new Date());
   const [poDate, setPoDate] = useState<Date>(new Date());
   const [ewayBillDate, setEwayBillDate] = useState<Date>(new Date());
   const [ewayExDate, setEwayExDate] = useState<Date>(new Date());
   const [items, setItems] = useState<ItemRow[]>([{ id: 1, description: "", pcs: "", weight: "" }]);
+
+  // Load initial data if editing
+  useEffect(() => {
+    if (initialData) {
+      setLrType(initialData.lr_type || "original");
+      setLrNo(initialData.lr_no || "");
+      setTruckNo(initialData.truck_no || "");
+      setFromPlace(initialData.from_place || "");
+      setToPlace(initialData.to_place || "");
+      if (initialData.date) setDate(new Date(initialData.date));
+      if (initialData.items) {
+        try {
+          const parsedItems = typeof initialData.items === 'string' 
+            ? JSON.parse(initialData.items) 
+            : initialData.items;
+          setItems(parsedItems);
+        } catch (e) {
+          console.error('Error parsing items:', e);
+        }
+      }
+    } else {
+      // Generate new LR number
+      const generateLRNo = async () => {
+        const prefix = "DEL";
+        const { count } = await supabase
+          .from('lr_details')
+          .select('*', { count: 'exact', head: true });
+        const newNumber = (count || 0) + 1;
+        setLrNo(`${prefix}/${String(newNumber).padStart(5, '0')}`);
+      };
+      generateLRNo();
+    }
+  }, [initialData]);
 
   const addItem = () => {
     setItems([...items, { id: items.length + 1, description: "", pcs: "", weight: "" }]);
@@ -45,13 +83,69 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "LR Saved",
-      description: "Lorry Receipt has been saved successfully.",
-    });
-    onSuccess();
+    const formData = new FormData(e.target as HTMLFormElement);
+    
+    try {
+      const lrData = {
+        lr_no: lrNo,
+        lr_type: lrType,
+        truck_no: truckNo,
+        date: format(date, 'yyyy-MM-dd'),
+        from_place: fromPlace,
+        to_place: toPlace,
+        invoice: formData.get('invoice') as string,
+        invoice_amount: formData.get('invoiceAmount') ? parseFloat(formData.get('invoiceAmount') as string) : null,
+        invoice_date: format(invoiceDate, 'yyyy-MM-dd'),
+        eway_bill_no: formData.get('ewayBillNo') as string,
+        eway_bill_date: format(ewayBillDate, 'yyyy-MM-dd'),
+        eway_ex_date: format(ewayExDate, 'yyyy-MM-dd'),
+        po_no: formData.get('poNo') as string,
+        po_date: format(poDate, 'yyyy-MM-dd'),
+        method_of_packing: formData.get('methodOfPacking') as string,
+        address_of_delivery: formData.get('addressOfDelivery') as string,
+        charged_weight: formData.get('chargedWeight') ? parseFloat(formData.get('chargedWeight') as string) : null,
+        lorry_type: formData.get('lorryType') as string,
+        items: JSON.stringify(items),
+        weight_mt: formData.get('weightMT') ? parseFloat(formData.get('weightMT') as string) : null,
+        actual_weight_mt: formData.get('actualWeightMT') ? parseFloat(formData.get('actualWeightMT') as string) : null,
+        height: formData.get('height') ? parseFloat(formData.get('height') as string) : null,
+        extra_height: formData.get('extraHeight') ? parseFloat(formData.get('extraHeight') as string) : null,
+        freight: formData.get('freight') ? parseFloat(formData.get('freight') as string) : null,
+        rate: formData.get('rate') ? parseFloat(formData.get('rate') as string) : null,
+      };
+
+      let error;
+      if (initialData?.id) {
+        // Update existing LR
+        ({ error } = await supabase
+          .from('lr_details')
+          .update(lrData)
+          .eq('id', initialData.id));
+      } else {
+        // Insert new LR
+        ({ error } = await supabase
+          .from('lr_details')
+          .insert([lrData]));
+      }
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `LR ${initialData ? 'updated' : 'created'} successfully`,
+      });
+      
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving LR:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save LR. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -75,12 +169,26 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="truckNo">TRUCK NO*</Label>
-            <Input id="truckNo" placeholder="TRUCK NO" required />
+            <Input 
+              id="truckNo" 
+              name="truckNo"
+              placeholder="TRUCK NO" 
+              value={truckNo}
+              onChange={(e) => setTruckNo(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="lrNo">LR NO*</Label>
-            <Input id="lrNo" placeholder="LR NO" required />
+            <Input 
+              id="lrNo" 
+              name="lrNo"
+              placeholder="LR NO" 
+              value={lrNo}
+              onChange={(e) => setLrNo(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
@@ -100,12 +208,26 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="fromPlace">FROM PLACE*</Label>
-            <Input id="fromPlace" placeholder="FROM PLACE" required />
+            <Input 
+              id="fromPlace" 
+              name="fromPlace"
+              placeholder="FROM PLACE" 
+              value={fromPlace}
+              onChange={(e) => setFromPlace(e.target.value)}
+              required 
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="toPlace">TO PLACE*</Label>
-            <Input id="toPlace" placeholder="TO PLACE" required />
+            <Input 
+              id="toPlace" 
+              name="toPlace"
+              placeholder="TO PLACE" 
+              value={toPlace}
+              onChange={(e) => setToPlace(e.target.value)}
+              required 
+            />
           </div>
         </div>
 

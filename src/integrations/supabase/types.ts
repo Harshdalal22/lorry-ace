@@ -14,7 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lr_details: {
+        Row: {
+          actual_weight_mt: number | null
+          address_of_delivery: string | null
+          agent: string | null
+          billing_party: string | null
+          billing_to_address: string | null
+          billing_to_city: string | null
+          billing_to_contact: string | null
+          billing_to_gst: string | null
+          billing_to_name: string | null
+          billing_to_pan: string | null
+          charged_weight: number | null
+          consignee_address: string | null
+          consignee_city: string | null
+          consignee_contact: string | null
+          consignee_gst: string | null
+          consignee_name: string | null
+          consignee_pan: string | null
+          consignor_address: string | null
+          consignor_city: string | null
+          consignor_contact: string | null
+          consignor_gst: string | null
+          consignor_name: string | null
+          consignor_pan: string | null
+          created_at: string
+          created_by: string | null
+          custom_logo_url: string | null
+          date: string
+          employee: string | null
+          eway_bill_date: string | null
+          eway_bill_no: string | null
+          eway_ex_date: string | null
+          extra_height: number | null
+          freight: number | null
+          from_place: string
+          gst_paid_by: string | null
+          height: number | null
+          id: string
+          invoice: string | null
+          invoice_amount: number | null
+          invoice_date: string | null
+          items: Json | null
+          lorry_type: string | null
+          lr_no: string
+          lr_type: string
+          method_of_packing: string | null
+          po_date: string | null
+          po_no: string | null
+          rate: number | null
+          rate_on: string | null
+          remark: string | null
+          template_design: string | null
+          to_place: string
+          truck_driver_no: string | null
+          truck_no: string
+          updated_at: string
+          weight_mt: number | null
+        }
+        Insert: {
+          actual_weight_mt?: number | null
+          address_of_delivery?: string | null
+          agent?: string | null
+          billing_party?: string | null
+          billing_to_address?: string | null
+          billing_to_city?: string | null
+          billing_to_contact?: string | null
+          billing_to_gst?: string | null
+          billing_to_name?: string | null
+          billing_to_pan?: string | null
+          charged_weight?: number | null
+          consignee_address?: string | null
+          consignee_city?: string | null
+          consignee_contact?: string | null
+          consignee_gst?: string | null
+          consignee_name?: string | null
+          consignee_pan?: string | null
+          consignor_address?: string | null
+          consignor_city?: string | null
+          consignor_contact?: string | null
+          consignor_gst?: string | null
+          consignor_name?: string | null
+          consignor_pan?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_logo_url?: string | null
+          date: string
+          employee?: string | null
+          eway_bill_date?: string | null
+          eway_bill_no?: string | null
+          eway_ex_date?: string | null
+          extra_height?: number | null
+          freight?: number | null
+          from_place: string
+          gst_paid_by?: string | null
+          height?: number | null
+          id?: string
+          invoice?: string | null
+          invoice_amount?: number | null
+          invoice_date?: string | null
+          items?: Json | null
+          lorry_type?: string | null
+          lr_no: string
+          lr_type: string
+          method_of_packing?: string | null
+          po_date?: string | null
+          po_no?: string | null
+          rate?: number | null
+          rate_on?: string | null
+          remark?: string | null
+          template_design?: string | null
+          to_place: string
+          truck_driver_no?: string | null
+          truck_no: string
+          updated_at?: string
+          weight_mt?: number | null
+        }
+        Update: {
+          actual_weight_mt?: number | null
+          address_of_delivery?: string | null
+          agent?: string | null
+          billing_party?: string | null
+          billing_to_address?: string | null
+          billing_to_city?: string | null
+          billing_to_contact?: string | null
+          billing_to_gst?: string | null
+          billing_to_name?: string | null
+          billing_to_pan?: string | null
+          charged_weight?: number | null
+          consignee_address?: string | null
+          consignee_city?: string | null
+          consignee_contact?: string | null
+          consignee_gst?: string | null
+          consignee_name?: string | null
+          consignee_pan?: string | null
+          consignor_address?: string | null
+          consignor_city?: string | null
+          consignor_contact?: string | null
+          consignor_gst?: string | null
+          consignor_name?: string | null
+          consignor_pan?: string | null
+          created_at?: string
+          created_by?: string | null
+          custom_logo_url?: string | null
+          date?: string
+          employee?: string | null
+          eway_bill_date?: string | null
+          eway_bill_no?: string | null
+          eway_ex_date?: string | null
+          extra_height?: number | null
+          freight?: number | null
+          from_place?: string
+          gst_paid_by?: string | null
+          height?: number | null
+          id?: string
+          invoice?: string | null
+          invoice_amount?: number | null
+          invoice_date?: string | null
+          items?: Json | null
+          lorry_type?: string | null
+          lr_no?: string
+          lr_type?: string
+          method_of_packing?: string | null
+          po_date?: string | null
+          po_no?: string | null
+          rate?: number | null
+          rate_on?: string | null
+          remark?: string | null
+          template_design?: string | null
+          to_place?: string
+          truck_driver_no?: string | null
+          truck_no?: string
+          updated_at?: string
+          weight_mt?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
