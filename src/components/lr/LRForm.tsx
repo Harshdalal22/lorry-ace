@@ -39,6 +39,10 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
   const [ewayBillDate, setEwayBillDate] = useState<Date>(new Date());
   const [ewayExDate, setEwayExDate] = useState<Date>(new Date());
   const [items, setItems] = useState<ItemRow[]>([{ id: 1, description: "", pcs: "", weight: "" }]);
+  
+  // Custom states for Consignor and Consignee names, now as inputs
+  const [consignorName, setConsignorName] = useState("");
+  const [consigneeName, setConsigneeName] = useState("");
 
   // Load initial data if editing
   useEffect(() => {
@@ -49,6 +53,10 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
       setFromPlace(initialData.from_place || "");
       setToPlace(initialData.to_place || "");
       if (initialData.date) setDate(new Date(initialData.date));
+      // Load custom fields
+      setConsignorName(initialData.consignor_name || "");
+      setConsigneeName(initialData.consignee_name || "");
+      
       if (initialData.items) {
         try {
           const parsedItems = typeof initialData.items === 'string' 
@@ -107,6 +115,26 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         address_of_delivery: formData.get('addressOfDelivery') as string,
         charged_weight: formData.get('chargedWeight') ? parseFloat(formData.get('chargedWeight') as string) : null,
         lorry_type: formData.get('lorryType') as string,
+        
+        // Consignor/Consignee data now coming from custom state/inputs
+        consignor_name: consignorName,
+        consignee_name: consigneeName,
+        consignor_address: formData.get('consignorAddress') as string,
+        consignor_city: formData.get('consignorCity') as string,
+        consignor_contact: formData.get('consignorContact') as string,
+        consignor_pan: formData.get('consignorPAN') as string,
+        consignor_gst: formData.get('consignorGST') as string,
+        
+        consignee_address: formData.get('consigneeAddress') as string,
+        consignee_city: formData.get('consigneeCity') as string,
+        consignee_contact: formData.get('consigneeContact') as string,
+        consignee_pan: formData.get('consigneePAN') as string,
+        consignee_gst: formData.get('consigneeGST') as string,
+        
+        // Billing To details (keeping Selects for now, assuming the party list might be static/short)
+        billing_to_name: formData.get('billingToName') as string, // Keeping this if Select is used
+        // Need to add other billing fields if they are supposed to be saved
+        
         items: JSON.stringify(items),
         weight_mt: formData.get('weightMT') ? parseFloat(formData.get('weightMT') as string) : null,
         actual_weight_mt: formData.get('actualWeightMT') ? parseFloat(formData.get('actualWeightMT') as string) : null,
@@ -114,6 +142,16 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         extra_height: formData.get('extraHeight') ? parseFloat(formData.get('extraHeight') as string) : null,
         freight: formData.get('freight') ? parseFloat(formData.get('freight') as string) : null,
         rate: formData.get('rate') ? parseFloat(formData.get('rate') as string) : null,
+        
+        // Billing Party, GST Paid By, Agent are intentionally left out as they aren't explicitly loaded/saved in this component's existing logic, 
+        // but adding them here for completeness if required for DB consistency.
+        billing_party: formData.get('billingParty') as string,
+        gst_paid_by: formData.get('gstPaidBy') as string,
+        agent: formData.get('agent') as string,
+        
+        employee: formData.get('employee') as string,
+        truck_driver_no: formData.get('truckDriverNo') as string,
+        remark: formData.get('remark') as string,
       };
 
       let error;
@@ -235,12 +273,12 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="invoice">INVOICE</Label>
-            <Input id="invoice" placeholder="INVOICE" />
+            <Input id="invoice" name="invoice" placeholder="INVOICE" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="invoiceAmount">INVOICE AMOUNT</Label>
-            <Input id="invoiceAmount" placeholder="INVOICE AMOUNT" type="number" />
+            <Input id="invoiceAmount" name="invoiceAmount" placeholder="INVOICE AMOUNT" type="number" />
           </div>
 
           <div className="space-y-2">
@@ -260,7 +298,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="ewayBillNo">EWAY BILL NO</Label>
-            <Input id="ewayBillNo" placeholder="EWAY BILL NO" />
+            <Input id="ewayBillNo" name="ewayBillNo" placeholder="EWAY BILL NO" />
           </div>
 
           <div className="space-y-2">
@@ -298,7 +336,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="poNo">P.O. NO</Label>
-            <Input id="poNo" placeholder="P.O. NO" />
+            <Input id="poNo" name="poNo" placeholder="P.O. NO" />
           </div>
 
           <div className="space-y-2">
@@ -318,22 +356,22 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="methodOfPacking">METHOD OF PACKING</Label>
-            <Input id="methodOfPacking" placeholder="METHOD OF PACKING" />
+            <Input id="methodOfPacking" name="methodOfPacking" placeholder="METHOD OF PACKING" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="addressOfDelivery">ADDRESS OF DELIVERY</Label>
-            <Input id="addressOfDelivery" placeholder="ADDRESS OF DELIVERY" />
+            <Input id="addressOfDelivery" name="addressOfDelivery" placeholder="ADDRESS OF DELIVERY" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="chargedWeight">CHARGED WEIGHT</Label>
-            <Input id="chargedWeight" placeholder="CHARGED WEIGHT" type="number" />
+            <Input id="chargedWeight" name="chargedWeight" placeholder="CHARGED WEIGHT" type="number" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="lorryType">LORRY TYPE</Label>
-            <Input id="lorryType" placeholder="LORRY TYPE" />
+            <Input id="lorryType" name="lorryType" placeholder="LORRY TYPE" />
           </div>
         </div>
 
@@ -341,7 +379,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="billingParty">BILLING PARTY</Label>
-            <Select>
+            <Select name="billingParty">
               <SelectTrigger>
                 <SelectValue placeholder="Select Billing Party" />
               </SelectTrigger>
@@ -354,7 +392,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="gstPaidBy">GST PAID BY</Label>
-            <Select>
+            <Select name="gstPaidBy">
               <SelectTrigger>
                 <SelectValue placeholder="Select GST Paid By" />
               </SelectTrigger>
@@ -368,59 +406,120 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
         {/* Consignor, Consignee, Billing To Sections */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          {/* Consignor */}
+          {/* Consignor - CHANGED TO INPUT */}
           <Card className="p-4 bg-[hsl(var(--logistics-red))] text-white">
             <h3 className="font-bold mb-3">CONSIGNOR</h3>
             <div className="space-y-3">
               <div>
                 <Label htmlFor="consignorName" className="text-white">NAME</Label>
-                <Select>
-                  <SelectTrigger className="bg-white text-foreground">
-                    <SelectValue placeholder="Select Consignor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="c1">Consignor 1</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input 
+                  id="consignorName" 
+                  name="consignorName"
+                  placeholder="Enter Consignor Name"
+                  value={consignorName}
+                  onChange={(e) => setConsignorName(e.target.value)}
+                  className="bg-white text-foreground" 
+                />
               </div>
-              <Textarea placeholder="ADDRESS" className="bg-white text-foreground min-h-[80px]" />
-              <Input placeholder="CITY" className="bg-white text-foreground" />
-              <Input placeholder="CONTACT" className="bg-white text-foreground" />
-              <Input placeholder="PAN" className="bg-white text-foreground" />
-              <Input placeholder="GST" className="bg-white text-foreground" />
+              <Textarea 
+                id="consignorAddress"
+                name="consignorAddress"
+                placeholder="ADDRESS" 
+                defaultValue={initialData?.consignor_address}
+                className="bg-white text-foreground min-h-[80px]" 
+              />
+              <Input 
+                id="consignorCity"
+                name="consignorCity"
+                placeholder="CITY" 
+                defaultValue={initialData?.consignor_city}
+                className="bg-white text-foreground" 
+              />
+              <Input 
+                id="consignorContact"
+                name="consignorContact"
+                placeholder="CONTACT" 
+                defaultValue={initialData?.consignor_contact}
+                className="bg-white text-foreground" 
+              />
+              <Input 
+                id="consignorPAN"
+                name="consignorPAN"
+                placeholder="PAN" 
+                defaultValue={initialData?.consignor_pan}
+                className="bg-white text-foreground" 
+              />
+              <Input 
+                id="consignorGST"
+                name="consignorGST"
+                placeholder="GST" 
+                defaultValue={initialData?.consignor_gst}
+                className="bg-white text-foreground" 
+              />
             </div>
           </Card>
 
-          {/* Consignee */}
+          {/* Consignee - CHANGED TO INPUT */}
           <Card className="p-4 bg-[hsl(var(--logistics-red))] text-white">
             <h3 className="font-bold mb-3">CONSIGNEE</h3>
             <div className="space-y-3">
               <div>
                 <Label htmlFor="consigneeName" className="text-white">NAME</Label>
-                <Select>
-                  <SelectTrigger className="bg-white text-foreground">
-                    <SelectValue placeholder="Select Consignee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="c1">Consignee 1</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input 
+                  id="consigneeName" 
+                  name="consigneeName"
+                  placeholder="Enter Consignee Name"
+                  value={consigneeName}
+                  onChange={(e) => setConsigneeName(e.target.value)}
+                  className="bg-white text-foreground" 
+                />
               </div>
-              <Textarea placeholder="ADDRESS" className="bg-white text-foreground min-h-[80px]" />
-              <Input placeholder="CITY" className="bg-white text-foreground" />
-              <Input placeholder="CONTACT" className="bg-white text-foreground" />
-              <Input placeholder="PAN" className="bg-white text-foreground" />
-              <Input placeholder="GST" className="bg-white text-foreground" />
+              <Textarea 
+                id="consigneeAddress"
+                name="consigneeAddress"
+                placeholder="ADDRESS" 
+                defaultValue={initialData?.consignee_address}
+                className="bg-white text-foreground min-h-[80px]" 
+              />
+              <Input 
+                id="consigneeCity"
+                name="consigneeCity"
+                placeholder="CITY" 
+                defaultValue={initialData?.consignee_city}
+                className="bg-white text-foreground" 
+              />
+              <Input 
+                id="consigneeContact"
+                name="consigneeContact"
+                placeholder="CONTACT" 
+                defaultValue={initialData?.consignee_contact}
+                className="bg-white text-foreground" 
+              />
+              <Input 
+                id="consigneePAN"
+                name="consigneePAN"
+                placeholder="PAN" 
+                defaultValue={initialData?.consignee_pan}
+                className="bg-white text-foreground" 
+              />
+              <Input 
+                id="consigneeGST"
+                name="consigneeGST"
+                placeholder="GST" 
+                defaultValue={initialData?.consignee_gst}
+                className="bg-white text-foreground" 
+              />
             </div>
           </Card>
 
-          {/* Billing To */}
+          {/* Billing To (Kept as Select/Input combo for now) */}
           <Card className="p-4 bg-[hsl(var(--logistics-red))] text-white">
             <h3 className="font-bold mb-3">BILLING TO</h3>
             <div className="space-y-3">
               <div>
                 <Label htmlFor="billingToName" className="text-white">NAME</Label>
-                <Select>
+                {/* Note: If Billing To should also be custom input, this should be changed similarly. Keeping as Select for now based on original file. */}
+                <Select name="billingToName"> 
                   <SelectTrigger className="bg-white text-foreground">
                     <SelectValue placeholder="Select Billing Party" />
                   </SelectTrigger>
@@ -441,7 +540,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         {/* Agent */}
         <div className="mb-6">
           <Label htmlFor="agent">AGENT</Label>
-          <Select>
+          <Select name="agent">
             <SelectTrigger>
               <SelectValue placeholder="Select Agent" />
             </SelectTrigger>
@@ -536,32 +635,32 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="weightMT">WEIGHT (MT)</Label>
-            <Input id="weightMT" placeholder="WEIGHT (MT)" type="number" step="0.01" />
+            <Input id="weightMT" name="weightMT" placeholder="WEIGHT (MT)" type="number" step="0.01" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="actualWeightMT">ACTUAL WEIGHT (MT)</Label>
-            <Input id="actualWeightMT" placeholder="WEIGHT (MT)" type="number" step="0.01" />
+            <Input id="actualWeightMT" name="actualWeightMT" placeholder="WEIGHT (MT)" type="number" step="0.01" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="height">HEIGHT</Label>
-            <Input id="height" placeholder="HEIGHT" type="number" />
+            <Input id="height" name="height" placeholder="HEIGHT" type="number" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="extraHeight">EXTRA HEIGHT</Label>
-            <Input id="extraHeight" placeholder="EX HEIGHT" type="number" />
+            <Input id="extraHeight" name="extraHeight" placeholder="EX HEIGHT" type="number" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="freight">FREIGHT</Label>
-            <Input id="freight" placeholder="FREIGHT" type="number" />
+            <Input id="freight" name="freight" placeholder="FREIGHT" type="number" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="rate">RATE</Label>
-            <Input id="rate" placeholder="RATE" type="number" />
+            <Input id="rate" name="rate" placeholder="RATE" type="number" />
           </div>
         </div>
 
@@ -569,7 +668,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="rateOn">RATE ON</Label>
-            <Select>
+            <Select name="rateOn">
               <SelectTrigger>
                 <SelectValue placeholder="Select Rate Type" />
               </SelectTrigger>
@@ -583,7 +682,7 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="employee">EMPLOYEE</Label>
-            <Select>
+            <Select name="employee">
               <SelectTrigger>
                 <SelectValue placeholder="Select Employee" />
               </SelectTrigger>
@@ -595,11 +694,11 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="truckDriverNo">TRUCK DRIVER NO</Label>
-            <Select>
+            <Select name="truckDriverNo">
               <SelectTrigger>
                 <SelectValue placeholder="Select Driver" />
               </SelectTrigger>
-              <SelectContent>
+            <SelectContent>
                 <SelectItem value="driver1">Driver 1</SelectItem>
               </SelectContent>
             </Select>
@@ -609,13 +708,13 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
         {/* Remark */}
         <div className="mb-6">
           <Label htmlFor="remark">REMARK</Label>
-          <Textarea id="remark" placeholder="Enter remarks..." rows={4} />
+          <Textarea id="remark" name="remark" placeholder="Enter remarks..." rows={4} />
         </div>
 
         {/* Action Buttons */}
         <div className="flex gap-3 justify-center">
           <Button type="submit" size="lg" className="px-8">
-            UPDATE & SAVE
+            {initialData ? 'UPDATE & SAVE' : 'CREATE & SAVE'}
           </Button>
           <Button type="button" variant="destructive" size="lg" className="px-8" onClick={onSuccess}>
             CANCEL
