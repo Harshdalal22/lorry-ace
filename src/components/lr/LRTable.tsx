@@ -104,14 +104,23 @@ const LRTable = ({ onEdit }: LRTableProps) => {
         }
 
         try {
+          // Capture the template as canvas
           const canvas = await html2canvas(pdfTemplateRef.current, {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             logging: false,
             backgroundColor: '#ffffff',
+            windowWidth: 794, // A4 width in pixels at 96 DPI
+            windowHeight: 1123, // A4 height in pixels at 96 DPI
           });
 
+          // Validate canvas dimensions
+          if (!canvas || canvas.width === 0 || canvas.height === 0) {
+            throw new Error('Invalid canvas dimensions');
+          }
+
+          // Create PDF
           const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
@@ -122,13 +131,33 @@ const LRTable = ({ onEdit }: LRTableProps) => {
           const pdfWidth = 210;
           const pdfHeight = 297;
           
-          // Calculate aspect ratio to fit content properly
-          const imgWidth = pdfWidth;
-          const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+          // Calculate dimensions to fit on A4
+          const canvasWidth = canvas.width;
+          const canvasHeight = canvas.height;
+          const ratio = canvasHeight / canvasWidth;
+          
+          let imgWidth = pdfWidth;
+          let imgHeight = pdfWidth * ratio;
+          
+          // If height exceeds page, scale down
+          if (imgHeight > pdfHeight) {
+            imgHeight = pdfHeight;
+            imgWidth = pdfHeight / ratio;
+          }
 
-          // Add image to PDF
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
-          pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+          // Validate final dimensions
+          if (!isFinite(imgWidth) || !isFinite(imgHeight) || imgWidth <= 0 || imgHeight <= 0) {
+            throw new Error('Invalid image dimensions calculated');
+          }
+
+          // Convert canvas to image
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          
+          // Add image to PDF - center it if needed
+          const xOffset = (pdfWidth - imgWidth) / 2;
+          const yOffset = 0;
+          
+          pdf.addImage(imgData, 'JPEG', xOffset, yOffset, imgWidth, imgHeight);
           
           // Save PDF with automatic download
           pdf.save(`LR_${lr.lr_no}.pdf`);
@@ -149,7 +178,7 @@ const LRTable = ({ onEdit }: LRTableProps) => {
             variant: "destructive",
           });
         }
-      }, 500);
+      }, 800);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
@@ -352,8 +381,10 @@ const LRTable = ({ onEdit }: LRTableProps) => {
       </Card>
 
       {/* Hidden PDF Template for rendering */}
-      <div className="hidden">
-        <LRPDFTemplate ref={pdfTemplateRef} data={selectedLR} logoUrl={selectedLR?.custom_logo_url} />
+      <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+        {selectedLR && (
+          <LRPDFTemplate ref={pdfTemplateRef} data={selectedLR} logoUrl={selectedLR?.custom_logo_url} />
+        )}
       </div>
 
       {/* Share Dialog */}
