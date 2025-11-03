@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Palette, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DesignCustomizerProps {
   open: boolean;
@@ -17,12 +18,76 @@ const DesignCustomizer = ({ open, onOpenChange, onSave }: DesignCustomizerProps)
   const { toast } = useToast();
   const [selectedTemplate, setSelectedTemplate] = useState("standard");
   const [logoUrl, setLogoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const templates = [
     { id: "standard", name: "Standard SSK Template", preview: "Default red & blue design" },
     { id: "modern", name: "Modern Template", preview: "Clean minimalist design" },
     { id: "classic", name: "Classic Template", preview: "Traditional business style" },
   ];
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Invalid File",
+          description: "Please upload an image file",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Please upload an image smaller than 2MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUploading(true);
+
+      // Create a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('lr_assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('lr_assets')
+        .getPublicUrl(filePath);
+
+      setLogoUrl(publicUrl);
+
+      toast({
+        title: "Success",
+        description: "Logo uploaded successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload logo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = () => {
     onSave({
@@ -60,13 +125,34 @@ const DesignCustomizer = ({ open, onOpenChange, onSave }: DesignCustomizerProps)
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
               />
-              <Button variant="outline" size="icon">
-                <Upload className="h-4 w-4" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Logo will appear in the header of your LR document
+              Logo will appear in the header of your LR document. Max size: 2MB
             </p>
+            {logoUrl && (
+              <div className="mt-2">
+                <img src={logoUrl} alt="Logo preview" className="h-16 w-16 object-contain border rounded" />
+              </div>
+            )}
           </div>
 
           {/* Template Selection */}

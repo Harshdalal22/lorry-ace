@@ -87,45 +87,69 @@ const LRTable = ({ onEdit }: LRTableProps) => {
     try {
       setSelectedLR(lr);
       
-      // Wait for the template to render
+      toast({
+        title: "Generating PDF",
+        description: "Please wait while we create your LR document...",
+      });
+
+      // Wait for the template to render with the new data
       setTimeout(async () => {
-        if (!pdfTemplateRef.current) return;
+        if (!pdfTemplateRef.current) {
+          toast({
+            title: "Error",
+            description: "PDF template not found",
+            variant: "destructive",
+          });
+          return;
+        }
 
-        toast({
-          title: "Generating PDF",
-          description: "Please wait while we create your LR document...",
-        });
+        try {
+          const canvas = await html2canvas(pdfTemplateRef.current, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+          });
 
-        const canvas = await html2canvas(pdfTemplateRef.current, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-        });
+          const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+          });
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4',
-        });
+          // A4 size in mm
+          const pdfWidth = 210;
+          const pdfHeight = 297;
+          
+          // Calculate aspect ratio to fit content properly
+          const imgWidth = pdfWidth;
+          const imgHeight = (canvas.height * pdfWidth) / canvas.width;
 
-        const imgWidth = 210; // A4 width in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+          // Add image to PDF
+          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+          
+          // Save PDF with automatic download
+          pdf.save(`LR_${lr.lr_no}.pdf`);
+          
+          // Also create blob for sharing
+          const blob = pdf.output('blob');
+          setPdfBlob(blob);
 
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        
-        // Save PDF
-        pdf.save(`LR_${lr.lr_no}.pdf`);
-        
-        // Also create blob for sharing
-        const blob = pdf.output('blob');
-        setPdfBlob(blob);
-
-        toast({
-          title: "Success",
-          description: "PDF generated successfully",
-        });
-      }, 100);
+          toast({
+            title: "Success",
+            description: `PDF downloaded as LR_${lr.lr_no}.pdf`,
+          });
+        } catch (error) {
+          console.error('Error in PDF generation:', error);
+          toast({
+            title: "Error",
+            description: "Failed to generate PDF. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }, 500);
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast({
