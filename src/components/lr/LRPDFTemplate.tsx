@@ -1,4 +1,5 @@
 import { forwardRef } from "react";
+import sskSignature from "@/assets/ssk-signature.png";
 
 interface LRPDFTemplateProps {
   data: any;
@@ -17,26 +18,20 @@ const LRPDFTemplate = forwardRef<HTMLDivElement, LRPDFTemplateProps>(({ data, lo
             )}
             <div>
               <h1 className="text-4xl font-bold text-red-600" style={{ fontFamily: 'Arial, sans-serif' }}>
-                SSK INDIA LOGISTICS
+                SSK CARGO SERVICES PVT LTD
               </h1>
-              <p className="text-sm font-semibold">(Fleet Owner & Contractor)</p>
             </div>
           </div>
           <div className="text-right text-sm">
-            <p className="font-bold">Jai Dada Udmiram Ki</p>
-            <p className="font-semibold">SUBJECT TO DELHI JURISDICTION</p>
-            <p>7834819005</p>
-            <p>8929920007</p>
-            <p>7600026311</p>
-            <p>9619905027</p>
+            <p>Contact: 7834819005, 8929920007</p>
           </div>
         </div>
 
         <p className="text-xs text-center">
-          Shop No. 362-A/2, Sataya Puram Colony, Jharoda Border, Near Ashram, New Delhi-110072
+          Shop No-37, New Anaj Mandi, Sampla, Rohtak -124501
         </p>
         <p className="text-xs text-center mb-4">
-          Mail : ssindialogitics@gmail.com, Web : www.indialogistics.com
+          sskcargoservices@gmail.com
         </p>
 
         {/* Available At / Caution / At Owners Risks */}
@@ -58,8 +53,7 @@ const LRPDFTemplate = forwardRef<HTMLDivElement, LRPDFTemplateProps>(({ data, lo
           <div className="border-2 border-black p-2 space-y-2">
             <div>
               <p className="font-bold">AT OWNERS RISKS</p>
-              <p>Pan No. : CMFPS3661A</p>
-              <p className="text-red-600 font-bold">GST No. : 07CMFPS3661A1Z6</p>
+              <p className="text-red-600 font-bold">GST: 06ABQCS8517E1Z0</p>
             </div>
             <div>
               <p className="font-bold">INSURANCE</p>
@@ -212,8 +206,9 @@ const LRPDFTemplate = forwardRef<HTMLDivElement, LRPDFTemplateProps>(({ data, lo
             <p className="text-2xl font-bold text-red-600">GST PAYABLE BY</p>
           </div>
           <div className="text-right">
-            <p className="font-bold">For SSK INDIA LOGISTICS</p>
-            <div className="mt-8">
+            <p className="font-bold">For SSK CARGO SERVICES PVT LTD</p>
+            <div className="mt-4">
+              <img src={sskSignature} alt="Authorized Signature" className="h-16 w-auto ml-auto" />
               <p className="italic">Auth. Signatory</p>
             </div>
           </div>
