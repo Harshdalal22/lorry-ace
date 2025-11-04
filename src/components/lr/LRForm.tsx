@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, isSupabaseReady } from "@/lib/supabase-safe";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LRFormProps {
   initialData?: any;
@@ -70,12 +70,8 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
     } else {
       // Generate new LR number
       const generateLRNo = async () => {
-        if (!isSupabaseReady()) {
-          setLrNo("DEL/00001");
-          return;
-        }
         const prefix = "DEL";
-        const { count } = await supabase!
+        const { count } = await supabase
           .from('lr_details')
           .select('*', { count: 'exact', head: true });
         const newNumber = (count || 0) + 1;
@@ -100,15 +96,6 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
     const formData = new FormData(e.target as HTMLFormElement);
     
     try {
-      if (!isSupabaseReady()) {
-        toast({
-          title: "Backend Not Ready",
-          description: "Please refresh the page to connect to the backend.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
       const lrData = {
         lr_no: lrNo,
         lr_type: lrType,
@@ -170,13 +157,13 @@ const LRForm = ({ initialData, onSuccess }: LRFormProps) => {
       let error;
       if (initialData?.id) {
         // Update existing LR
-        ({ error } = await supabase!
+        ({ error } = await supabase
           .from('lr_details')
           .update(lrData)
           .eq('id', initialData.id));
       } else {
         // Insert new LR
-        ({ error } = await supabase!
+        ({ error } = await supabase
           .from('lr_details')
           .insert([lrData]));
       }
