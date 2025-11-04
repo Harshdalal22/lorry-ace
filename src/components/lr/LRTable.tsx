@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit, Truck as TruckIcon, Printer, Trash2, Search, Share2, Palette } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseReady } from "@/lib/supabase-safe";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import LRPDFTemplate from "./LRPDFTemplate";
@@ -36,7 +36,17 @@ const LRTable = ({ onEdit }: LRTableProps) => {
   const fetchLRData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      if (!isSupabaseReady()) {
+        toast({
+          title: "Backend Not Ready",
+          description: "Please refresh the page to connect to the backend.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { data, error } = await supabase!
         .from('lr_details')
         .select('*')
         .order('created_at', { ascending: false });
