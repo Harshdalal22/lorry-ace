@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, MessageCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, isSupabaseReady } from "@/integrations/supabase/safe-client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareDialogProps {
   open: boolean;
@@ -40,20 +40,11 @@ const ShareDialog = ({ open, onOpenChange, lrData, pdfBlob }: ShareDialogProps) 
       return;
     }
 
-    if (!isSupabaseReady()) {
-      toast({
-        title: "Backend Connecting",
-        description: "Please refresh the page (Ctrl+Shift+R or Cmd+Shift+R)",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       // Upload PDF to Supabase Storage
       const fileName = `lr_${lrData.lr_no}_${Date.now()}.pdf`;
-      const { data: uploadData, error: uploadError } = await supabase!.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('lr_assets')
         .upload(fileName, pdfBlob, {
           contentType: 'application/pdf',
@@ -63,7 +54,7 @@ const ShareDialog = ({ open, onOpenChange, lrData, pdfBlob }: ShareDialogProps) 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase!.storage
+      const { data: { publicUrl } } = supabase.storage
         .from('lr_assets')
         .getPublicUrl(fileName);
 
@@ -111,15 +102,6 @@ const ShareDialog = ({ open, onOpenChange, lrData, pdfBlob }: ShareDialogProps) 
       return;
     }
 
-    if (!isSupabaseReady()) {
-      toast({
-        title: "Backend Connecting",
-        description: "Please refresh the page (Ctrl+Shift+R or Cmd+Shift+R)",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       // Convert PDF blob to base64
@@ -132,7 +114,7 @@ const ShareDialog = ({ open, onOpenChange, lrData, pdfBlob }: ShareDialogProps) 
           const base64 = base64data.split(',')[1]; // Remove data:application/pdf;base64, prefix
 
           // Call edge function to send email
-          const { error } = await supabase!.functions.invoke('send-lr-email', {
+          const { error } = await supabase.functions.invoke('send-lr-email', {
             body: {
               to: email,
               lrNo: lrData.lr_no,

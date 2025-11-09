@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Palette, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, isSupabaseReady } from "@/integrations/supabase/safe-client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DesignCustomizerProps {
   open: boolean;
